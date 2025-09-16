@@ -48,7 +48,7 @@ namespace TodoApi.Migrations
 
                     b.HasIndex("TodoListId");
 
-                    b.ToTable("TodoItem");
+                    b.ToTable("TodoItem", (string)null);
                 });
 
             modelBuilder.Entity("TodoApi.Models.TodoList", b =>
@@ -65,7 +65,7 @@ namespace TodoApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TodoList");
+                    b.ToTable("TodoList", (string)null);
                 });
 
             modelBuilder.Entity("TodoApi.Models.TodoItem", b =>
