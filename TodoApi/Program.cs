@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 builder
     .Services.AddDbContext<TodoContext>(opt =>
-        opt.UseSqlServer(builder.Configuration.GetConnectionString("TodoContext"))
+        opt.UseSqlServer(builder.Configuration.GetConnectionString("Default"))
     )
     .AddEndpointsApiExplorer()
     .AddControllers();
