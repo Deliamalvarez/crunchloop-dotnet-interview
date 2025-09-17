@@ -1,4 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Polly;
+using Polly.Contrib.WaitAndRetry;
+using Polly.Extensions.Http;
+using TodoApi.BackgroundServices;
+using TodoApi.Extensions;
+using TodoApi.ExternalService;
+using static TodoApi.ExternalService.ExternalTodoClient;
 
 var builder = WebApplication.CreateBuilder(args);
 builder
@@ -7,6 +14,21 @@ builder
     )
     .AddEndpointsApiExplorer()
     .AddControllers();
+
+builder.Services.AddHttpClient<IExternalTodoClient, ExternalTodoClient>(client =>
+{
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+})
+.AddPolicyHandler(HttpClientPolicies.GetRetryPolicy())
+.AddPolicyHandler(HttpClientPolicies.GetCircuitBreakerPolicy())
+.AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10))); ;
+
+builder.Services.Configure<ExternalTodoApiOptions>(
+    builder.Configuration.GetSection("ExternalTodoApi"));
+builder.Services.AddTransient<IExternalTodoClient, ExternalTodoClient>();
+builder.Services.AddTransient<ITodoSyncService, TodoSyncService>();
+
+builder.Services.AddHostedService<SyncTodoItemsWorker>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -29,3 +51,6 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
+
+

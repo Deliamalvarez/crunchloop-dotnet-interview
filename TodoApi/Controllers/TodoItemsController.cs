@@ -9,14 +9,9 @@ namespace TodoApi.Controllers
 {
     [Route("api/todolist")]
     [ApiController]
-    public class TodoItemsController : ControllerBase
+    public class TodoItemsController(TodoContext context) : ControllerBase
     {
-        private readonly TodoContext _context;
-
-        public TodoItemsController(TodoContext context)
-        {
-                _context = context;
-        }
+        private readonly TodoContext _context = context;
 
         [HttpGet("{listId}/todoItems")]
         public async Task<ActionResult<IList<TodoItemResponse>>> GetTodoItems([FromRoute] long listId) {
@@ -25,7 +20,7 @@ namespace TodoApi.Controllers
                 return NotFound();
             }
             var items = await _context.TodoItem.Where(item => item.TodoListId == listId).ToListAsync();
-            return Ok(items.Select((item) => new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted)));
+            return Ok(items.Select((item) => new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalTodoId)));
         }
 
         [HttpGet("{listId}/todoItems/{itemId}")]
@@ -36,7 +31,7 @@ namespace TodoApi.Controllers
             {
                 return NotFound();
             }
-            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted));
+            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalTodoId));
         }
 
         [HttpPost("{listId}/todoItems")]
@@ -68,7 +63,7 @@ namespace TodoApi.Controllers
             item.Title = request.Title;
             item.Description = request.Description;
             await _context.SaveChangesAsync();
-            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted));
+            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalTodoId));
         }
 
         [HttpPatch("{listId}/todoItems/{itemId}/complete")]
@@ -89,7 +84,7 @@ namespace TodoApi.Controllers
             }
             item.IsCompleted = true;
             await _context.SaveChangesAsync();
-            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted));
+            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalTodoId));
         }
 
         [HttpDelete("{listId}/todoItems/{itemId}")]

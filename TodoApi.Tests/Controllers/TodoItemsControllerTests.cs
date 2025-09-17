@@ -12,7 +12,7 @@ using TodoApi.Models;
 
 namespace TodoApi.Tests.Controllers;
 
-internal class TodoItemsControllerTests
+public class TodoItemsControllerTests
 {
     private DbContextOptions<TodoContext> DatabaseContextOptions()
     {
