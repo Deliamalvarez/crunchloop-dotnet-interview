@@ -32,7 +32,7 @@ public class TodoItemsControllerTests
     [Theory]
     [InlineData(1, 1)]
     [InlineData(1, 2)]
-    public async Task GetTodoItemById_WhenCalled_ReturnsTodoItemAsExpected(long listId, long itemId)
+    public async Task GetTodoItemById_WhenCalled_ReturnsTodoItemAsExpected(long listId, int itemId)
     {
         // Arrange
         await using var context = new TodoContext(DatabaseContextOptions());
