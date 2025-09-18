@@ -1,9 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TodoApi.ExternalService;
+﻿using TodoApi.ExternalService;
 
 namespace TodoApi.BackgroundServices;
 
@@ -18,6 +13,7 @@ public class SyncTodoItemsWorker(ITodoSyncService todoSyncService, ILogger<SyncT
         {
             try
             {
+                _logger.LogInformation("Starting todo syncronization with external API");
                 await _todoSyncService.SyncronizeExternalTodoItemsAsync(token);
             }
             catch (Exception ex)
@@ -26,7 +22,7 @@ public class SyncTodoItemsWorker(ITodoSyncService todoSyncService, ILogger<SyncT
             }
 
             // wait before next sync (avoid hammering external API)
-            await Task.Delay(TimeSpan.FromMinutes(15), token);
+            await Task.Delay(TimeSpan.FromMinutes(30), token);
         }
     }
 }

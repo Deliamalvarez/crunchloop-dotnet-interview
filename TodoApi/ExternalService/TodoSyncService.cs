@@ -18,41 +18,43 @@ public class TodoSyncService(IExternalTodoClient externalClient, IServiceProvide
     {
         using var scope = _serviceProvider.CreateScope();
         await using var context = scope.ServiceProvider.GetRequiredService<TodoContext>();
-        var validListIds = await GetValidTodoListIdsAsync(context, token);
+        var validListId = await GetTodoListByNameAsync(context, token);
 
-        if (!validListIds.Any())
-        {
-            Console.WriteLine("There are no list items now in the system, aborting sync operation");
-            return;
-        }
 
         var externalTodos = await FetchExternalTodosAsync(token);
 
-        foreach (var listId in validListIds)
+
+        var existingExternalIds = await context.TodoItem
+            .Where(item => item.TodoListId == validListId && item.ExternalTodoId != null)
+            .Select(item => item.ExternalTodoId)
+            .ToListAsync(token);
+
+        var missingTodos = externalTodos.Where(todo => !existingExternalIds.Contains(todo.Id)).ToList();
+
+        if (!missingTodos.Any())
         {
-            var existingExternalIds = await context.TodoItem
-                .Where(item => item.TodoListId == listId && item.ExternalTodoId != null)
-                .Select(item => item.ExternalTodoId)
-                .ToListAsync(token);
-
-            var missingTodos = externalTodos.Where(todo => !existingExternalIds.Contains(todo.Id)).ToList();
-
-            if (!missingTodos.Any())
-            {
-                Console.WriteLine($"TodoList {listId} is already synchronized.");
-                continue;
-            }
-
-            await AddTodosToDatabaseAsync(context, listId, missingTodos, token);
+            Console.WriteLine($"External TodoList is already synchronized.");
+            return;
         }
+
+        await AddTodosToDatabaseAsync(context, validListId, missingTodos, token);
+
     }
 
-
-    private async Task<IEnumerable<long>> GetValidTodoListIdsAsync(TodoContext context, CancellationToken token)
+    private async Task<long> GetTodoListByNameAsync(TodoContext context, CancellationToken token)
     {
-        return await context.TodoList
-            .Select(list => list.Id)
-            .ToListAsync(token);
+        var todoList = await context.TodoList
+            .FirstOrDefaultAsync(listItem => listItem.Name == "external", token);
+        if (todoList is null)
+        {
+            todoList = new TodoList
+            {
+                Name = "external"
+            };
+            context.TodoList.Add(todoList);
+            await context.SaveChangesAsync(token);
+        }
+        return todoList.Id;
     }
 
     private async Task<IEnumerable<ExternalTodoDto>> FetchExternalTodosAsync(CancellationToken token)
