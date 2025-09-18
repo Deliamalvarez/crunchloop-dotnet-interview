@@ -1,0 +1,70 @@
+*** Assumptions ***
+
+The external Todo public API used for the solution was:
+
+https://jsonplaceholder.typicode.com/todos, here is an example of a todo item already existing in this API:
+
+{
+"userId": 1,
+"id": 1,
+"title": "delectus aut autem",
+"completed": false
+}
+
+As part of the synchronization process, if a todo list named "external" already exists, it will be retrieved; otherwise, it will be created..
+
+A new attribute was added to the TodoItem model to handle external IDs and ensure that items are only added if they are not already present in the system.
+
+*** High-Level Overview: ***
+
+1. Use of a background service for External Synchronization:
+
+Purpose:
+A background service in .NET (typically implemented via IHostedService or BackgroundService) runs tasks independently of HTTP requests. In this project, it is used to periodically synchronize external todo items with the application database. As the name suggests, this service does not block the main application thread, so endpoints and core functionality remain available while synchronization takes place.
+
+Good Practices:
+•	Keeps synchronization logic out of controllers, ensuring web requests remain fast and focused.
+•	Dependency Injection: Accesses services (ITodoSyncService, IExternalTodoClient) through DI, improving testability and maintainability.
+•	Cancellation Support: Accepts a CancellationToken for graceful shutdowns.
+•	Scoped Services: Resolves scoped dependencies (like TodoContext) per operation, preventing lifetime issues.
+
+2. TodoSyncService
+Purpose:
+TodoSyncService encapsulates the logic for synchronizing todo items from an external source into the database
+
+Design & Good Practices:
+•	Single Responsibility: Handles only synchronization logic, not HTTP or background scheduling.
+•	Dependency Injection: Receives IExternalTodoClient and IServiceProvider via constructor, allowing for easy testing and loose coupling.
+•	Scoped DbContext: Resolves TodoContext from a scope when needed, ensuring correct lifetime management and thread safety.
+•	Async/Await: Uses asynchronous database and network operations for scalability.
+•	Error Handling & Logging: Should log errors and handles exceptions gracefully.
+
+3. ExternalTodoItem Classes and Interfaces
+Purpose:
+These define the contract and data model for interacting with the external Todo API.
+•	IExternalTodoClient: Interface defining methods to fetch external todo items.
+•	ExternalTodoClient: Implementation that uses HttpClient to call the external API.
+•	ExternalTodoDTO: Data transfer object representing a todo item from the external source.
+Good Practices:
+•	Interface Abstraction: IExternalTodoClient enables mocking and swapping implementations (e.g., for testing or alternate APIs).
+•	DTO Usage: ExternalTodoDto decouples external data structures from internal models, supporting mapping and validation.
+•	HttpClient Factory: Uses AddHttpClient for efficient, managed HTTP connections.
+•	Configuration: External API settings are injected via configuration options, keeping secrets and environment-specific values out of code.
+
+4. Polly Library for HTTP Resilience
+Purpose:
+Polly is a .NET resilience and transient-fault-handling library that allows you to define retry, timeout, and circuit-breaker policies.
+
+Why Use Polly with HttpClient in this application?
+•	Resilience: Handles transient failures (timeouts, dropped connections, rate limits, etc.) gracefully.
+•	Centralized Policy Management: Defines policies once and applies them across all HTTP calls.
+•	Integration: Works seamlessly with HttpClientFactory.
+
+Policies applied in the application:
+•	Retry Policy: Automatically retries failed HTTP requests a specified number of times, with optional delays between attempts. Useful for handling temporary network issues or service unavailability.
+•	Circuit Breaker Policy: Temporarily blocks requests after a certain number of consecutive failures, allowing the external service time to recover and preventing overload.
+•	Timeout Policy: Cancels requests that exceed a specified duration, preventing resource exhaustion.
+
+
+*** Areas of Improvement ***
+The synchronization interval in the background service should be configurable through application settings instead of being hardcoded.
