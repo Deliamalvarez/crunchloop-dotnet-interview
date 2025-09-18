@@ -44,7 +44,7 @@ public class TodoSyncService(IExternalTodoClient externalClient, IServiceProvide
     private async Task<long> GetTodoListByNameAsync(TodoContext context, CancellationToken token)
     {
         var todoList = await context.TodoList
-            .FirstOrDefaultAsync(listItem => listItem.Name == "external", token);
+            .FirstOrDefaultAsync(listItem => string.Equals(listItem.Name, "external", StringComparison.InvariantCultureIgnoreCase), token);
         if (todoList is null)
         {
             todoList = new TodoList
