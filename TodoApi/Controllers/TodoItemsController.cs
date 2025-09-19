@@ -20,7 +20,7 @@ namespace TodoApi.Controllers
                 return NotFound();
             }
             var items = await _context.TodoItem.Where(item => item.TodoListId == listId).ToListAsync();
-            return Ok(items.Select((item) => new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalTodoId)));
+            return Ok(items.Select((item) => new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalId)));
         }
 
         [HttpGet("{listId}/todoItems/{itemId}")]
@@ -31,7 +31,7 @@ namespace TodoApi.Controllers
             {
                 return NotFound();
             }
-            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalTodoId));
+            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalId));
         }
 
         [HttpPost("{listId}/todoItems")]
@@ -63,7 +63,7 @@ namespace TodoApi.Controllers
             item.Title = request.Title;
             item.Description = request.Description;
             await _context.SaveChangesAsync();
-            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalTodoId));
+            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalId));
         }
 
         [HttpPatch("{listId}/todoItems/{itemId}/complete")]
@@ -84,7 +84,7 @@ namespace TodoApi.Controllers
             }
             item.IsCompleted = true;
             await _context.SaveChangesAsync();
-            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalTodoId));
+            return Ok(new TodoItemResponse(item.Id, item.Title, item.Description, item.IsCompleted, item.ExternalId));
         }
 
         [HttpDelete("{listId}/todoItems/{itemId}")]

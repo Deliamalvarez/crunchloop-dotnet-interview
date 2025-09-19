@@ -17,8 +17,7 @@ public class TodoItem
     [DefaultValue(false)]
     public bool IsCompleted { get; set; }
 
-    [AllowNull]
-    public long? ExternalTodoId { get; set; }
+    public string? ExternalId { get; set; }
 
     public long TodoListId { get; set; }
 

@@ -1,10 +1,13 @@
 ﻿
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TodoApi.ExternalService;
 
-public record ExternalTodoDto(int UserId, int Id, string Title, bool Completed);
+public record ExternalTodoListDto([property: JsonPropertyName("id")] string Id, [property: JsonPropertyName("source_id")] string SourceId, [property: JsonPropertyName("name")] string Name, [property: JsonPropertyName("created_at")] DateTime CreatedAt, [property: JsonPropertyName("updated_at")] DateTime UpdatedAt, [property: JsonPropertyName("item")] IEnumerable<ExternalTodoItemDto> Items);
+
+public record ExternalTodoItemDto([property: JsonPropertyName("id")] string Id, [property: JsonPropertyName("source_id")] string SourceId, [property: JsonPropertyName("description")] string Description, [property: JsonPropertyName("completed")] bool Completed, [property: JsonPropertyName("created_at")] DateTime CreatedAt, [property: JsonPropertyName("updated_at")] DateTime UpdatedAt);
 
 public class ExternalTodoClient(HttpClient httpClient, IOptions<ExternalTodoClient.ExternalTodoApiOptions> options, ILogger<ExternalTodoClient> logger) : IExternalTodoClient
 {
@@ -18,12 +21,12 @@ public class ExternalTodoClient(HttpClient httpClient, IOptions<ExternalTodoClie
 
     private readonly ILogger<ExternalTodoClient> _logger = logger;
 
-    public async Task<IEnumerable<ExternalTodoDto>> GetTodosAsync(CancellationToken token)
+    public async Task<IEnumerable<ExternalTodoListDto>> GetExternalTodoListsAsync(CancellationToken token)
     {
         try {
             var response = await _httpClient.GetAsync(_options.TodosUrl, token);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<IEnumerable<ExternalTodoDto>>(token)
+            return await response.Content.ReadFromJsonAsync<IEnumerable<ExternalTodoListDto>>(token)
                    ?? [];
         }
         catch (OperationCanceledException)

@@ -2,5 +2,5 @@
 
 public interface IExternalTodoClient
 {
-    Task<IEnumerable<ExternalTodoDto>> GetTodosAsync(CancellationToken token);
+    Task<IEnumerable<ExternalTodoListDto>> GetExternalTodoListsAsync(CancellationToken token);
 }
