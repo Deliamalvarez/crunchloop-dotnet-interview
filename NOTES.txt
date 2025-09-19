@@ -1,20 +1,3 @@
-*** Assumptions ***
-
-The external Todo public API used for the solution was:
-
-https://jsonplaceholder.typicode.com/todos, here is an example of a todo item already existing in this API:
-
-{
-"userId": 1,
-"id": 1,
-"title": "delectus aut autem",
-"completed": false
-}
-
-As part of the synchronization process, if a todo list named "external" already exists, it will be retrieved; otherwise, it will be created..
-
-A new attribute was added to the TodoItem model to handle external IDs and ensure that items are only added if they are not already present in the system.
-
 *** High-Level Overview: ***
 
 1. Use of a background service for External Synchronization:
@@ -30,7 +13,7 @@ Good Practices:
 
 2. TodoSyncService
 Purpose:
-TodoSyncService encapsulates the logic for synchronizing todo items from an external source into the database
+TodoSyncService encapsulates the logic for synchronizing todo lists and it's relative todo items from an external source into the database
 
 Design & Good Practices:
 •	Single Responsibility: Handles only synchronization logic, not HTTP or background scheduling.
